@@ -1,0 +1,155 @@
+class Sensor {
+public:
+    double value;
+
+    void read() {
+        cout << "Reading sensor: " << value << endl;
+    }
+};
+
+class Motor : public Sensor {
+public:
+    void set_speed(double v) {
+        value = v;
+        cout << "Motor speed set to " << value << endl;
+    }
+};
+
+Problema conceitual:
+A relação Motor : public Sensor significa que um Motor “é um” Sensor.
+Mas isso não faz sentido no mundo real nem em termos de modelagem de sistemas.
+
+Um sensor é um dispositivo de medição (lê dados do ambiente).
+
+Um motor é um atuador (gera movimento ou força).
+
+São entidades completamente diferentes: um mede, o outro executa.
+Logo, “Motor é um Sensor” é uma herança incorreta.
+Isso quebra o princípio da substituição de Liskov (LSP):
+
+Se Motor herda de Sensor, deveria poder ser usado onde um Sensor é esperado — o que claramente não faz sentido.
+
+2. Modelagem correta (usando composição)
+Uma forma mais adequada seria criar classes independentes, e talvez um Controlador que use ambas (composição):
+
+#include <iostream>
+using namespace std;
+
+class Sensor {
+private:
+    double value;
+
+public:
+    Sensor(double v = 0.0) : value(v) {}
+
+    double read() {
+        cout << "Reading sensor: " << value << endl;
+        return value;
+    }
+
+    void set_value(double v) {
+        value = v;
+    }
+};
+
+class Motor {
+private:
+    double speed;
+
+public:
+    Motor() : speed(0.0) {}
+
+    void set_speed(double v) {
+        speed = v;
+        cout << "Motor speed set to " << speed << endl;
+    }
+};
+
+// Classe que usa composição — tem um Sensor e um Motor
+class Controlador {
+private:
+    Sensor sensor;
+    Motor motor;
+
+public:
+    Controlador(Sensor s, Motor m) : sensor(s), motor(m) {}
+
+    void controlar() {
+        double leitura = sensor.read();
+        if (leitura > 50)
+            motor.set_speed(0);
+        else
+            motor.set_speed(100);
+    }
+};
+
+int main() {
+    Sensor temp_sensor(45.0);
+    Motor motor;
+    Controlador ctrl(temp_sensor, motor);
+
+    ctrl.controlar();
+}
+
+Explicação:
+
+Agora Sensor e Motor são classes separadas, com responsabilidades claras.
+
+O Controlador compõe (tem) um sensor e um motor.
+
+Isso segue o princípio “composição sobre herança” — mais flexível e mais fiel ao domínio da automação.
+
+3. Polimorfismo — Estático vs Dinâmico
+Polimorfismo Estático (Overloading)
+Ocorre em tempo de compilação, quando métodos com o mesmo nome têm assinaturas diferentes (parâmetros distintos).
+
+class Math {
+public:
+    int soma(int a, int b) {
+        return a + b;
+    }
+
+    double soma(double a, double b) {
+        return a + b;
+    }
+};
+
+O compilador escolhe qual método chamar com base nos tipos dos argumentos — antes da execução.
+
+Polimorfismo Dinâmico (Overriding)
+Ocorre em tempo de execução, quando uma classe derivada redefine um método virtual da classe base.
+
+class Dispositivo {
+public:
+    virtual void operar() {
+        cout << "Operando dispositivo genérico" << endl;
+    }
+};
+
+class Motor : public Dispositivo {
+public:
+    void operar() override {
+        cout << "Motor girando..." << endl;
+    }
+};
+
+void executar(Dispositivo* d) {
+    d->operar();
+}
+
+int main() {
+    Motor m;
+    executar(&m); // Executa "Motor girando...", não o método base
+}
+
+Aqui, o método chamado depende do tipo real do objeto, e não do tipo do ponteiro.
+Esse é o polimorfismo dinâmico, base da extensibilidade em sistemas orientados a objetos.
+
+Resumo Final
+
+Conceito	        Explicação	                                                Exemplo
+
+Herança incorreta	Motor herda de Sensor — viola o princípio “é um”.	        Motor : public Sensor
+Correção	        Usar composição: Controlador tem um Sensor e tem um Motor.	class Controlador { Sensor s; Motor m; }
+Polimorfismo estático (overloading)	Vários métodos com o mesmo nome, mas parâmetros diferentes.	soma(int,int) e soma(double,double)
+Polimorfismo dinâmico (overriding)	Subclasse redefine método virtual da base.	Motor::operar() substitui Dispositivo::operar()

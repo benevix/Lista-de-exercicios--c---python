@@ -1,0 +1,141 @@
+class Shape:
+    def area(self):
+        return 0
+
+class Circle(Shape):
+    def area(self, r):
+        return 3.14 * r * r
+
+shapes = [Circle()]
+
+for s in shapes:
+    print(s.area())
+
+O que acontece ao executar?
+Ao rodar o programa, ocorre um erro em tempo de execução:
+
+
+TypeError: area() missing 1 required positional argument: 'r'
+Motivo:
+
+A classe Shape define area(self) sem parâmetros.
+
+A classe Circle redefine (override) o método area com assinatura diferente (area(self, r)).
+
+Na lista shapes, o código chama s.area() sem argumentos, porque espera que o método siga a interface da classe base.
+
+Mas a subclasse exige um argumento adicional (r), quebrando o contrato do método original.
+
+2. Erro conceitual
+
+O erro é que a subclasse não manteve a interface da superclasse.
+Ou seja, violou o polimorfismo — a ideia de que um objeto de qualquer subclasse pode ser usado como se fosse da classe base, sem quebrar o código.
+
+Em POO, a assinatura dos métodos herdados deve ser compatível com os da classe base.
+Isso garante o Princípio da Substituição de Liskov (LSP):
+
+Se Circle herda de Shape, deve poder substituir Shape sem alterar o comportamento esperado.
+
+3. Correção e uso correto do polimorfismo
+A maneira correta é fazer com que cada forma saiba calcular sua própria área, sem depender de argumentos externos no método.
+
+from math import pi
+
+class Shape:
+    def area(self):
+        return 0
+
+class Circle(Shape):
+    def __init__(self, r):
+        self.r = r
+
+    def area(self):
+        return pi * self.r * self.r
+
+class Rectangle(Shape):
+    def __init__(self, w, h):
+        self.w = w
+        self.h = h
+
+    def area(self):
+        return self.w * self.h
+
+# Lista polimórfica
+shapes = [Circle(3), Rectangle(4, 5)]
+
+for s in shapes:
+    print(s.area())
+
+O que acontece aqui:
+
+Cada forma (Circle, Rectangle) implementa o mesmo método area().
+
+O loop for não precisa saber o tipo exato do objeto — apenas que ele tem um método area().
+
+Isso é polimorfismo dinâmico: o método correto é escolhido em tempo de execução.
+
+
+4. “Programar para uma interface, não para uma implementação”
+Significado:
+
+Esse princípio diz que devemos depender de abstrações, e não de classes concretas.
+Ou seja, o código deve usar interfaces genéricas (ou classes base abstratas), e não precisar conhecer os detalhes das implementações específicas.
+
+“Programe para o que o objeto faz, e não para o que ele é.”
+
+Exemplo prático — sensores e atuadores em automação industrial
+Imagine um sistema que controla a temperatura de um tanque industrial.
+Ele precisa ler a temperatura e acionar um atuador (aquecedor ou ventilador), mas não deve se importar com o tipo exato de sensor ou atuador.
+
+from abc import ABC, abstractmethod
+
+# Interface (abstração)
+class Sensor(ABC):
+    @abstractmethod
+    def ler(self) -> float:
+        pass
+
+class Atuador(ABC):
+    @abstractmethod
+    def acionar(self, estado: bool):
+        pass
+
+# Implementações concretas
+class SensorTemperatura(Sensor):
+    def ler(self):
+        print("Lendo sensor de temperatura...")
+        return 32.5
+
+class Ventilador(Atuador):
+    def acionar(self, estado):
+        print("Ventilador ligado" if estado else "Ventilador desligado")
+
+# Classe de controle que depende da interface, não da implementação
+class ControladorTemperatura:
+    def __init__(self, sensor: Sensor, atuador: Atuador):
+        self.sensor = sensor
+        self.atuador = atuador
+
+    def controlar(self, limite):
+        temperatura = self.sensor.ler()
+        if temperatura > limite:
+            self.atuador.acionar(True)
+        else:
+            self.atuador.acionar(False)
+Uso:
+
+sensor = SensorTemperatura()
+atuador = Ventilador()
+controlador = ControladorTemperatura(sensor, atuador)
+controlador.controlar(30)
+O controlador não precisa saber se o sensor é de temperatura, pressão, ou se o atuador é um motor ou válvula.
+Ele programa para a interface (Sensor, Atuador), e não para as classes concretas.
+
+Resumo Final
+
+Conceito	                                           Explicação	                                                                                           Exemplo
+
+Erro no código original                          	A subclasse Circle redefine area() com parâmetros diferentes, quebrando o contrato polimórfico.	          def area(self, r) vs def area(self)
+Polimorfismo correto	                                Todas as subclasses implementam area() com a mesma assinatura, mas comportamentos diferentes.	          Circle.area() e Rectangle.area()
+Programar para interface	                        O código usa abstrações (interfaces, classes base) em vez de depender de implementações concretas.	  Controlador usa Sensor e Atuador, não SensorTemperatura ou Ventilador.
+Vantagem	                                        Facilita substituição, manutenção e testes; reduz acoplamento; aumenta flexibilidade.	                  Trocar o sensor físico sem mudar o controlador.

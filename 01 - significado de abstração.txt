@@ -1,0 +1,61 @@
+Abstração, em Orientação a Objetos, é o princípio de simplificar a complexidade do mundo real, representando apenas os aspectos essenciais de um objeto ou sistema — ou seja, o que ele faz, e não como ele faz.
+
+Na prática, a abstração permite criar modelos genéricos que escondem detalhes de implementação, facilitando o entendimento, manutenção e expansão do sistema.
+
+💡 Exemplo prático: Sistema de controle ou automação
+
+Imagine um sistema de automação industrial que precisa controlar diferentes atuadores — por exemplo, um ventilador (cooler) e um aquecedor (heater).
+
+Podemos criar uma classe abstrata chamada Atuador, que define o comportamento comum a todos os tipos de atuadores:
+
+from abc import ABC, abstractmethod
+
+class Atuador(ABC):
+    @abstractmethod
+    def ligar(self):
+        pass
+
+    @abstractmethod
+    def desligar(self):
+        pass
+
+
+Essa classe não sabe como cada atuador é ligado ou desligado — ela apenas define a interface que todos devem seguir.
+
+Depois, podemos criar implementações específicas:
+
+class Ventilador(Atuador):
+    def ligar(self):
+        print("Ventilador ligado para resfriar o sistema.")
+
+    def desligar(self):
+        print("Ventilador desligado.")
+
+class Aquecedor(Atuador):
+    def ligar(self):
+        print("Aquecedor ligado para aquecer o sistema.")
+
+    def desligar(self):
+        print("Aquecedor desligado.")
+
+✅ Vantagem da abstração
+
+Com isso, o controle de temperatura pode acionar os atuadores sem se preocupar com o tipo exato de dispositivo:
+
+def controlar(atuador: Atuador, temperatura, limite):
+    if temperatura > limite:
+        atuador.ligar()
+    else:
+        atuador.desligar()
+
+
+Nesse exemplo:
+
+A classe abstrata Atuador representa o conceito genérico (abstração).
+
+As classes Ventilador e Aquecedor são implementações concretas.
+
+O controle pode funcionar com qualquer atuador, sem precisar conhecer os detalhes internos de cada um.
+
+👉 Resumindo:
+A abstração em POO serve para destacar o essencial e ocultar o desnecessário, permitindo criar sistemas modulares, genéricos e fáceis de estender — algo fundamental em projetos de automação e controle industrial.

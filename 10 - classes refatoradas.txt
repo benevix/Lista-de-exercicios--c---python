@@ -1,0 +1,69 @@
+class Robot:
+    def __init__(self, name):
+        self.name = name
+
+    def move_motor(self, speed):
+        print(f"Moving motor at {speed} rpm")
+
+    def read_sensor(self):
+        print("Reading sensor value")
+
+    def control_loop(self):
+        self.move_motor(100)
+        self.read_sensor()
+
+
+Problemas de SRP
+Mistura de responsabilidades:
+
+A classe Robot faz controle de motor (move_motor), leitura de sensores (read_sensor) e ainda orquestra a lógica do controle (control_loop).
+
+Isso significa que se mudarmos a forma de controlar o motor ou de ler sensores, ou até a lógica de controle, a classe precisa ser modificada. Ou seja, múltiplos motivos para mudança.
+
+Dificuldade de manutenção e testes:
+
+Testar apenas a leitura do sensor ou o motor isoladamente se torna mais difícil.
+
+Qualquer alteração em um subsistema (motor ou sensor) afeta a classe inteira.
+
+Refatoração seguindo SRP
+Uma abordagem comum é separar responsabilidades em classes distintas:
+
+class Motor:
+    def move(self, speed):
+        print(f"Moving motor at {speed} rpm")
+
+
+class Sensor:
+    def read(self):
+        print("Reading sensor value")
+
+
+class Robot:
+    def __init__(self, name, motor: Motor, sensor: Sensor):
+        self.name = name
+        self.motor = motor
+        self.sensor = sensor
+
+    def control_loop(self):
+        self.motor.move(100)
+        self.sensor.read()
+
+Vantagens dessa refatoração
+Responsabilidade única:
+
+Motor cuida apenas do motor.
+
+Sensor cuida apenas da leitura de sensores.
+
+Robot cuida apenas da coordenação entre motor e sensor.
+
+Facilidade de teste:
+
+Podemos testar Motor e Sensor isoladamente.
+
+Podemos até criar mocks para Motor e Sensor ao testar Robot.
+
+Extensibilidade:
+
+É fácil trocar a implementação do motor ou do sensor (por exemplo, motor passo a passo, sensor de temperatura, etc.) sem alterar a lógica do Robot.

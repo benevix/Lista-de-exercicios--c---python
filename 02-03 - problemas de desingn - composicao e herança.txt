@@ -1,0 +1,113 @@
+class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner
+        self.balance = balance
+
+    def withdraw(self, amount):
+        self.balance = self.balance - amount
+        print("Novo saldo:", self.balance)
+
+acc = BankAccount("Ana", 100)
+acc.withdraw(200)
+print(acc.balance)
+
+Problemas:
+Falta de encapsulamento:
+
+O atributo balance é público, podendo ser alterado diretamente:
+
+acc.balance = -9999
+Isso quebra a segurança e integridade dos dados da conta.
+
+Ausência de validação:
+
+O método withdraw() permite sacar mais do que o saldo, resultando em saldo negativo, o que pode ser indesejado.
+
+Responsabilidade fraca (falta de controle interno):
+
+A classe não protege suas próprias regras de negócio (por exemplo, não impedir saldo negativo ou verificar valores inválidos).
+
+2. Aplicando Encapsulamento para segurança
+O encapsulamento é o princípio de ocultar os detalhes internos de uma classe, expondo apenas o que é necessário por meio de métodos públicos controlados.
+
+Uma forma de corrigir o design é tornar os atributos privados (ou semiprivados, com _) e fornecer métodos de acesso (getters e setters controlados):
+
+
+class BankAccount:
+    def __init__(self, owner, balance):
+        self.__owner = owner          # atributo privado
+        self.__balance = balance      # atributo privado
+
+    def deposit(self, amount):
+        if amount > 0:
+            self.__balance += amount
+            print("Depósito realizado. Novo saldo:", self.__balance)
+        else:
+            print("Valor de depósito inválido.")
+
+    def withdraw(self, amount):
+        if 0 < amount <= self.__balance:
+            self.__balance -= amount
+            print("Saque realizado. Novo saldo:", self.__balance)
+        else:
+            print("Saldo insuficiente ou valor inválido.")
+
+    def get_balance(self):
+        return self.__balance
+Uso:
+
+acc = BankAccount("Ana", 100)
+acc.withdraw(200)        # agora o sistema bloqueia o saque indevido
+print(acc.get_balance()) # acesso controlado ao saldo
+
+Melhorias:
+
+Protege o estado interno (__balance);
+
+Impede operações inválidas;
+
+Define uma interface clara de acesso;
+
+Garante consistência dos dados.
+
+3. Diferença entre composição e herança
+Conceito	Descrição	Exemplo
+Herança	Uma classe herda comportamento e atributos de outra. Indica uma relação “é um”.	class SensorTemperatura(Sensor): ...
+Composição	Uma classe usa objetos de outras classes como partes internas. Indica uma relação “tem um”.	class Controlador: def __init__(self, sensor, atuador): self.sensor = sensor self.atuador = atuador
+
+4. Quando a composição é mais adequada em sistemas de automação
+Na automação industrial, composição geralmente é mais apropriada que herança, porque os sistemas são modulares e combinam componentes independentes.
+
+Exemplo prático:
+Um Controlador de Temperatura pode ter um sensor e ter atuadores (aquecedor e ventilador).
+Não faz sentido dizer que o controlador “é um sensor” — mas sim que ele usa sensores.
+
+
+class Sensor:
+    def ler(self):
+        return 25.5
+
+class Atuador:
+    def acionar(self):
+        print("Atuador ligado")
+
+class Controlador:
+    def __init__(self, sensor, atuador):
+        self.sensor = sensor
+        self.atuador = atuador
+
+    def controlar(self):
+        temperatura = self.sensor.ler()
+        if temperatura > 30:
+            self.atuador.acionar()
+Assim, o Controlador é composto por outros objetos, e podemos trocar sensores ou atuadores sem alterar sua lógica.
+
+Resumo Final
+
+Conceito	     Explicação
+
+Abstração	     Destacar o essencial e esconder o desnecessário.
+Encapsulamento	     Proteger dados internos e controlar o acesso.
+Herança	             Reutiliza código via relação “é um”.
+Composição  	     Constrói objetos complexos a partir de outros (“tem um”).
+Composição é preferida	Quando queremos sistemas flexíveis, modulares e com baixo acoplamento — típico em automação industrial.

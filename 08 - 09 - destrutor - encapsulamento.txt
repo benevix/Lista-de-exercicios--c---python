@@ -1,0 +1,176 @@
+#include <iostream>
+using namespace std;
+
+class Device {
+public:
+    virtual void operate() {
+        cout << "Operating generic device" << endl;
+    }
+
+    ~Device() { 
+        cout << "Device destroyed\n"; 
+    }
+};
+
+class Sensor : public Device {
+public:
+    void operate() override {
+        cout << "Reading sensor" << endl;
+    }
+
+    ~Sensor() { 
+        cout << "Sensor destroyed\n"; 
+    }
+};
+
+int main() {
+    Device* d = new Sensor();
+    d->operate();
+    delete d;
+}
+
+Saída ao executar:
+
+Reading sensor
+Device destroyed
+
+2. Problema existente
+
+O destrutor da classe base Device não é virtual.
+Isso é um erro clássico e muito perigoso quando se usa polimorfismo com ponteiros para classes base.
+
+O que acontece:
+
+O objeto real criado é de tipo Sensor.
+
+Mas ele é deletado via ponteiro de tipo Device*.
+
+Como o destrutor de Device não é virtual, apenas o destrutor da classe base é chamado.
+
+O destrutor de Sensor nunca é executado ❌.
+
+3. Consequência prática
+
+Isso causa vazamento de recursos e comportamento indefinido.
+
+Se a classe Sensor tivesse:
+
+alocação dinâmica (por exemplo, buffers, arquivos, portas seriais);
+
+ou objetos que precisassem ser liberados;
+
+Esses recursos nunca seriam desalocados corretamente, pois o destrutor da subclasse não é invocado.
+
+4. Solução correta: destrutor virtual
+Sempre que uma classe for base polimórfica (possui métodos virtuais), o destrutor deve ser virtual.
+
+class Device {
+public:
+    virtual void operate() {
+        cout << "Operating generic device" << endl;
+    }
+
+    virtual ~Device() {   //  destrutor virtual
+        cout << "Device destroyed\n";
+    }
+};
+
+class Sensor : public Device {
+public:
+    void operate() override {
+        cout << "Reading sensor" << endl;
+    }
+
+    ~Sensor() override {  // opcional, mas deixa explícito
+        cout << "Sensor destroyed\n";
+    }
+};
+
+Saída agora:
+
+Reading sensor
+Sensor destroyed
+Device destroyed
+Agora a destruição ocorre de forma correta e completa, liberando todos os recursos da hierarquia.
+
+5. Conceito de Encapsulamento
+
+Definição:
+
+Encapsulamento é o princípio de ocultar os detalhes internos de uma classe e restringir o acesso direto aos seus dados.
+Em vez disso, o acesso é feito por meio de métodos públicos controlados (getters/setters ou funções de interface).
+
+Em outras palavras:
+
+“A classe controla como seus dados são manipulados, evitando acesso direto e inseguro.”
+
+6. Como o encapsulamento melhora a manutenção
+Reduz o acoplamento: outras partes do código não dependem da implementação interna.
+
+Facilita modificações: você pode alterar o funcionamento interno sem quebrar quem usa a classe.
+
+Evita erros humanos: impede que código externo altere valores críticos indevidamente.
+
+Protege a integridade do sistema: principalmente em automação, onde dados incorretos podem causar falhas físicas.
+
+7. Exemplo prático: controle industrial
+Imagine um sistema de controle de temperatura que manipula um atuador.
+
+Sem encapsulamento:
+
+class Heater {
+public:
+    double power; // público!
+
+    void on() { cout << "Heater ON\n"; }
+    void off() { cout << "Heater OFF\n"; }
+};
+
+Código externo pode fazer:
+
+Heater h;
+h.power = -9999;  // valor inválido, perigoso!
+Isso pode causar comportamento incorreto ou até danos físicos no equipamento.
+
+Com encapsulamento:
+
+class Heater {
+private:
+    double power; // agora é protegido
+
+public:
+    void setPower(double p) {
+        if (p >= 0 && p <= 100)
+            power = p;
+        else
+            cout << "Valor de potência inválido!\n";
+    }
+
+    double getPower() const { return power; }
+
+    void on() { cout << "Heater ON (" << power << "%)\n"; }
+    void off() { cout << "Heater OFF\n"; }
+};
+
+Agora:
+
+Heater h;
+h.setPower(80);   // válido
+h.setPower(-50);  // rejeitado
+
+Benefícios:
+
+O objeto protege seu próprio estado.
+
+O código externo não pode violar regras físicas.
+
+A manutenção é mais simples, pois toda a lógica de validação está centralizada.
+
+8. Resumo final
+
+Conceito	                          Explicação	                                                                    Correção/Exemplo
+Problema no código	                  O destrutor da classe base Device não é virtual.	                            virtual Device()
+Risco	                                  Destrutor da subclasse não chamado → vazamento de recursos.	                    Recursos (memória, conexões) não são liberados.
+Solução	                                  Declarar o destrutor da classe base como virtual.	                            Garante destruição completa.
+Encapsulamento	                          Oculta dados internos e controla acesso via métodos.	                            private + getters/setters com validação.
+Benefício em automação	                  Evita alterações diretas em variáveis críticas (ex.: potência, temperatura).	    Impede falhas e melhora a confiabilidade.
